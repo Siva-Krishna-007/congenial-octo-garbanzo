@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satsang Proposal Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=28">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Sidebar nav -->
+  <aside class="rail">
+    <div class="rail-brand">
+      <span class="brand-mark">S</span>
+      <div>
+        <div class="brand-name">Proposal Studio</div>
+        <div class="brand-sub">Satsang Solutions</div>
+      </div>
+    </div>
+    <nav class="rail-steps">
+      <button class="rail-step active" data-step="1"><span class="rail-num">1</span>Setup</button>
+      <button class="rail-step" data-step="2"><span class="rail-num">2</span>Document</button>
+      <button class="rail-step" data-step="3"><span class="rail-num">3</span>Team &amp; Tools</button>
+      <button class="rail-step" data-step="4"><span class="rail-num">4</span>Review &amp; Export</button>
+      <button class="rail-step" data-step="5"><span class="rail-num">5</span>Knowledge Base</button>
+    </nav>
+    <nav class="rail-steps rail-extra">
+      <button class="rail-step" data-step="pending"><span class="rail-num">⏳</span>Pending <span id="pendingBadge" class="badge" style="display:none">0</span></button>
+      <button class="rail-step" data-step="admin"><span class="rail-num">⚙</span>Admin</button>
+    </nav>
+    <div class="rail-foot">
+      <button class="btn small secondary" id="newProposalBtn" style="width:100%;margin-bottom:10px">+ New proposal</button>
+      <div id="statusPill" class="status-pill status-off">API key not set</div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="content">
+
+    <!-- STEP 1: Setup -->
+    <section class="step" id="step-1">
+      <header class="step-head">
+        <h1>Setup</h1>
+        <p>Connect OpenRouter — your company details and defaults now live in Admin.</p>
+      </header>
+
+      <div class="card">
+        <div class="card-head-row">
+          <h2>Chat model</h2>
+          <div class="provider-toggle">
+            <button type="button" class="provider-toggle-btn active" id="chatProviderOpenRouterBtn" data-provider="openrouter">OpenRouter</button>
+            <button type="button" class="provider-toggle-btn" id="chatProviderOllamaBtn" data-provider="ollama">Ollama (local)</button>
+            <button type="button" class="provider-toggle-btn" id="chatProviderCustomBtn" data-provider="custom">OmniRoute</button>
+            <button type="button" class="provider-toggle-btn" id="chatProviderNvidiaBtn" data-provider="nvidia">NVIDIA NIM</button>
+          </div>
+        </div>
+
+        <div id="chatOpenRouterFields">
+          <label class="field">
+            <span>API key</span>
+            <input type="password" id="apiKey" placeholder="sk-or-v1-...">
+          </label>
+          <p class="hint">Stored only in this browser (localStorage). Never sent anywhere except OpenRouter. Get a key at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.</p>
+          <label class="field">
+            <span>Model</span>
+            <select id="modelSelect">
+              <option value="anthropic/claude-sonnet-4.5">anthropic/claude-sonnet-4.5</option>
+              <option value="anthropic/claude-3.7-sonnet">anthropic/claude-3.7-sonnet</option>
+              <option value="openai/gpt-4o">openai/gpt-4o</option>
+              <option value="google/gemini-2.5-pro">google/gemini-2.5-pro</option>
+              <option value="deepseek/deepseek-chat">deepseek/deepseek-chat</option>
+              <option value="__custom__">Custom model id...</option>
+            </select>
+          </label>
+          <label class="field" id="customModelWrap" style="display:none">
+            <span>Custom model id</span>
+            <input type="text" id="customModel" placeholder="vendor/model-name">
+          </label>
+          <button class="btn secondary" id="testKeyBtn">Test connection</button>
+          <span id="testKeyResult" class="test-result"></span>
+        </div>
+
+        <div id="chatOllamaFields" style="display:none">
+          <label class="field">
+            <span>Ollama chat model</span>
+            <div class="ollama-select-row">
+              <select id="ollamaChatModel"><option value="">Click refresh to list installed models...</option></select>
+              <button type="button" class="btn small secondary" id="ollamaChatRefreshBtn" title="Refresh model list">↻</button>
+            </div>
+          </label>
+          <p class="hint" id="ollamaChatModelHint">Must already be pulled locally (<code>ollama pull llama3.2</code>) and <code>ollama serve</code> running. No API key needed — runs entirely on this machine.</p>
+        </div>
+
+        <div id="chatCustomFields" style="display:none">
+          <label class="field">
+            <span>Custom model id</span>
+            <input type="text" id="customApiChatModel" placeholder="e.g. llama-3.3-70b-versatile">
+          </label>
+          <p class="hint"><a href="https://github.com/diegosouzapw/OmniRoute" target="_blank" rel="noopener">OmniRoute</a> is a self-hosted gateway that fronts 260+ LLM providers behind one OpenAI-compatible endpoint — install it once, add your provider keys in its own dashboard, and point this at it instead of juggling separate integrations per provider. Server URL and API key are set once below, shared with the embedding model if that's also set to OmniRoute.</p>
+        </div>
+
+        <div id="chatNvidiaFields" style="display:none">
+          <label class="field">
+            <span>Model</span>
+            <input type="text" id="nvidiaChatModel" placeholder="e.g. meta/llama-3.3-70b-instruct">
+          </label>
+          <p class="hint">Full catalog and exact model ids at <a href="https://build.nvidia.com/models" target="_blank" rel="noopener">build.nvidia.com/models</a>. API key is set once below, shared with the embedding model if that's also set to NVIDIA NIM.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head-row">
+          <h2>Embedding model (for RAG)</h2>
+          <div class="provider-toggle">
+            <button type="button" class="provider-toggle-btn active" id="embedProviderOpenRouterBtn" data-provider="openrouter">OpenRouter</button>
+            <button type="button" class="provider-toggle-btn" id="embedProviderOllamaBtn" data-provider="ollama">Ollama (local)</button>
+            <button type="button" class="provider-toggle-btn" id="embedProviderCustomBtn" data-provider="custom">OmniRoute</button>
+            <button type="button" class="provider-toggle-btn" id="embedProviderNvidiaBtn" data-provider="nvidia">NVIDIA NIM</button>
+          </div>
+        </div>
+        <p class="hint">Used to turn Knowledge Base uploads and Ask AI questions into vectors.</p>
+
+        <div id="embedOpenRouterFields">
+          <label class="field">
+            <span>Embedding model</span>
+            <select id="embedModelSelect">
+              <option value="nvidia/nemotron-3-embed-1b:free">nvidia/nemotron-3-embed-1b:free</option>
+              <option value="__custom__">Custom model id...</option>
+            </select>
+          </label>
+          <label class="field" id="customEmbedModelWrap" style="display:none">
+            <span>Custom embedding model id</span>
+            <input type="text" id="customEmbedModel" placeholder="vendor/model-name">
+          </label>
+          <p class="hint">Uses the same OpenRouter key above — no separate account needed.</p>
+        </div>
+
+        <div id="embedOllamaFields" style="display:none">
+          <label class="field">
+            <span>Ollama embedding model</span>
+            <div class="ollama-select-row">
+              <select id="ollamaEmbedModel"><option value="">Click refresh to list installed models...</option></select>
+              <button type="button" class="btn small secondary" id="ollamaEmbedRefreshBtn" title="Refresh model list">↻</button>
+            </div>
+          </label>
+          <p class="hint" id="ollamaEmbedModelHint">Must already be pulled locally (<code>ollama pull nomic-embed-text</code>). Runs entirely on this machine — zero OpenRouter cost for embeddings.</p>
+        </div>
+
+        <div id="embedCustomFields" style="display:none">
+          <label class="field">
+            <span>Custom embedding model id</span>
+            <input type="text" id="customApiEmbedModel" placeholder="e.g. text-embedding-3-small">
+          </label>
+          <p class="hint">Same OmniRoute server URL and key as the chat model above, if that's also set to OmniRoute — otherwise set them below.</p>
+        </div>
+
+        <div id="embedNvidiaFields" style="display:none">
+          <label class="field">
+            <span>Embedding model</span>
+            <input type="text" id="nvidiaEmbedModel" placeholder="e.g. nvidia/nv-embedqa-e5-v5">
+          </label>
+          <p class="hint">Full catalog at <a href="https://build.nvidia.com/models" target="_blank" rel="noopener">build.nvidia.com/models</a> (filter by "Retrieval"). Same NVIDIA NIM API key as the chat model above, if that's also set to NVIDIA NIM — otherwise set it below.</p>
+        </div>
+      </div>
+
+      <div class="card" id="ollamaServerCard" style="display:none">
+        <h2>Local AI server (Ollama)</h2>
+        <label class="field">
+          <span>Ollama server URL</span>
+          <input type="text" id="ollamaUrl" placeholder="http://localhost:11434">
+        </label>
+        <p class="hint">Shared by both the chat and embedding model above, whichever is set to "Ollama (local)". If the browser can't reach it (a CORS error in the console), start Ollama with <code>OLLAMA_ORIGINS=*</code> set so it accepts requests from this page.</p>
+      </div>
+
+      <div class="card" id="customApiServerCard" style="display:none">
+        <h2>OmniRoute server</h2>
+        <p class="hint">
+          <a href="https://github.com/diegosouzapw/OmniRoute" target="_blank" rel="noopener">OmniRoute</a> is a self-hosted, open-source gateway (<code>npm install -g omniroute</code>) that gives one OpenAI-compatible endpoint in front of 260+ providers — OpenAI, Anthropic, Google, DeepSeek, Groq, Mistral, and more — with automatic fallback if one provider is down or rate-limited. Install and run it once, add your provider keys in <em>its</em> dashboard (not here), then just point this at its endpoint. Its default local address is filled in below.
+        </p>
+        <label class="field">
+          <span>OmniRoute Base URL</span>
+          <input type="text" id="customApiUrl" placeholder="http://localhost:20128/v1" value="http://localhost:20128/v1">
+        </label>
+        <label class="field">
+          <span>OmniRoute API key <span style="font-weight:400;opacity:.7">(issued from its dashboard, under Endpoints)</span></span>
+          <input type="password" id="customApiKey" placeholder="issued by OmniRoute's dashboard">
+        </label>
+        <p class="hint">Not running OmniRoute? This field still works with any other OpenAI-compatible endpoint directly — just replace the Base URL above with that provider's own (e.g. <code>https://api.groq.com/openai/v1</code>).</p>
+        <p class="hint">Shared by both the chat and embedding model above, whichever is set to "OmniRoute". Requests go to <code>{Base URL}/chat/completions</code> and <code>{Base URL}/embeddings</code>. Stored only in this browser (localStorage). Enter the model id (or <code>auto</code> for OmniRoute's own routing) in the Chat model / Embedding model cards above.</p>
+      </div>
+
+      <div class="card" id="nvidiaServerCard" style="display:none">
+        <h2>NVIDIA NIM</h2>
+        <p class="hint">
+          Direct access to NVIDIA-hosted inference at <a href="https://build.nvidia.com" target="_blank" rel="noopener">build.nvidia.com</a> — a fixed, single provider (not a router like OmniRoute), useful as an independent fallback if another provider is having a rough day, since it doesn't share any routing/infrastructure with them.
+        </p>
+        <label class="field">
+          <span>NVIDIA NIM API key</span>
+          <input type="password" id="nvidiaApiKey" placeholder="nvapi-...">
+        </label>
+        <p class="hint">Stored only in this browser (localStorage). Get a free key at <a href="https://build.nvidia.com" target="_blank" rel="noopener">build.nvidia.com</a> — generous free tier for open models (Llama, Mistral, Nemotron, and more). Shared by both the chat and embedding model above, whichever is set to "NVIDIA NIM".</p>
+      </div>
+
+      <div class="step-nav-arrows">
+        <span class="nav-spacer"></span>
+        <button class="btn primary small" data-nav-next="2">Next: Document →</button>
+      </div>
+    </section>
+
+    <!-- STEP 2: Document (upload, domain/tool selection, AI checklist analysis) -->
+    <section class="step hidden" id="step-2">
+      <header class="step-head">
+        <h1>Document</h1>
+        <p>Choose the document type, upload it, then send to AI to check it against the <span class="crit-count">15</span>-item checklist for the selected template. Everything except "Send to AI" is checked locally in your browser.</p>
+      </header>
+
+      <div class="card">
+        <div class="card-head-row">
+          <h2>Upload</h2>
+          <button class="btn small secondary" id="resetDocBtn">Reset document</button>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <label class="field" style="max-width:320px">
+            <span>Document type</span>
+            <select id="docTypeSelect">
+              <option value="preliminary">Preliminary Requirement Document</option>
+              <option value="requirement">Detailed Requirement Document</option>
+            </select>
+          </label>
+          <label class="field" style="max-width:320px">
+            <span>Template</span>
+            <select id="templateSelect"></select>
+          </label>
+        </div>
+        <p class="hint">The template picks which section structure (from Admin &gt; Template Library) the document gets checked against below.</p>
+        <p class="hint">Upload a .docx or .pdf. It's parsed entirely in your browser — nothing is sent anywhere at this step.</p>
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept=".pdf,.docx" hidden>
+          <div id="dropzoneLabel">Drop a .pdf or .docx here, or click to choose a file</div>
+        </div>
+        <div id="parseStatus" class="hint"></div>
+        <label class="field">
+          <span>Extracted text (stored automatically — you can also paste/type here instead of uploading, or fix anything the parser missed)</span>
+          <textarea id="prelimText" rows="14" placeholder="Extracted text will appear here. You can also paste/type directly."></textarea>
+        </label>
+      </div>
+
+      <div id="nonDrdSections">
+        <div class="card">
+          <h2>Check document</h2>
+          <p class="hint">Checks the uploaded document against every section of the selected Template, drafts a Detailed Requirement Document once you're ready, and suggests relevant tools later in the flow — no need to pick a domain/tool up front.</p>
+          <div class="add-row" style="margin-bottom:0">
+            <button class="btn primary small" id="sendToAiBtn" disabled>Send to AI</button>
+            <span class="hint" id="sendToAiHint" style="margin:0">Upload or paste a document above to enable this.</span>
+          </div>
+          <div id="aiVerifyStatus" class="hint"></div>
+        </div>
+
+        <div class="card" id="checklistCard" style="display:none">
+          <div class="card-head-row">
+            <h2><span class="crit-count">15</span>-item checklist</h2>
+            <button class="btn small secondary" id="rescanBtn">Re-run with AI</button>
+          </div>
+          <p class="hint">Same <span class="crit-count">15</span> questions for both document types. Green = the AI found this answered in the document (Agree to confirm it, or click Edit to make it editable). Red = not found — type an answer and click Agree to mark it met.</p>
+          <div id="checklistProgress" class="hint"></div>
+          <div id="checklistList"></div>
+          <div id="aiSuggestions"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head-row">
+            <h2>Questions you might have missed in the document</h2>
+            <button class="btn small secondary" id="genQuestionsBtn">Re-generate</button>
+          </div>
+          <p class="hint">Runs automatically right after "Send to AI" above. Beyond the <span class="crit-count">15</span>-item checklist, the AI reads your document and drafts questions phrased exactly as you'd ask the client directly — covering their organisation as well as scoping/pricing details. Fill in what you can, then "Accept all answered" folds them into the document for generation, or "Save for later" parks the whole draft in the Pending tab.</p>
+          <div id="qaStatus" class="hint"></div>
+
+          <div id="qaSections" style="display:none">
+            <h3 style="color:var(--green-dark);font-size:14px;margin:18px 0 10px">General questions you might have missed</h3>
+            <p class="hint" style="margin:-6px 0 10px">Anything about the project, organisation, or timeline the document doesn't already cover.</p>
+            <div id="qaGeneralList"></div>
+
+            <h3 style="color:var(--green-dark);font-size:14px;margin:18px 0 10px">Tool-related questions</h3>
+            <p class="hint" style="margin:-6px 0 10px">Grounded in whatever the document already says about current systems/tools — gaps worth confirming before scoping the selected Zoho tools.</p>
+            <div id="qaToolsList"></div>
+
+            <div id="companyQuestionsSection" style="display:none">
+              <h3 style="color:var(--green-dark);font-size:14px;margin:18px 0 10px">Company / engagement questions (from an earlier saved draft)</h3>
+              <div id="companyQuestionsList"></div>
+            </div>
+            <div id="clientQuestionsSection" style="display:none">
+              <h3 style="color:var(--green-dark);font-size:14px;margin:18px 0 10px">Questions to ask the client (from an earlier saved draft)</h3>
+              <div id="clientQuestionsList"></div>
+            </div>
+
+            <div class="add-row" style="margin-top:6px">
+              <button class="btn primary small" id="acceptQaBtn">Accept all answered</button>
+              <button class="btn secondary small" id="saveForLaterBtn">Save for later (starts a new session)</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card" id="createDrdCard" style="display:none">
+        <h2>Ready to build the Detailed Requirement Document</h2>
+        <p class="hint">Creates a properly formatted Detailed Requirement Document from what's above — folding in every confirmed checklist answer and question response — plus solution suggestions, in one pass. This becomes the single source of truth for Team &amp; Tools and for generating the Proposal/Scope of Work.</p>
+        <button class="btn primary" id="createDrdBtn">Create Detailed Requirement Document</button>
+      </div>
+
+      <div id="drdReviewSection" style="display:none">
+        <div class="card">
+          <div class="card-head-row">
+            <h2>Detailed Requirement Document</h2>
+            <button class="btn small secondary" id="drdSaveForLaterBtn">Save for later (starts a new session)</button>
+          </div>
+          <p class="hint">Edit anything directly, or use AI edit below — this is what Team &amp; Tools and the generated Proposal/Scope of Work will read.</p>
+        </div>
+        <div class="card">
+          <h2>Edit with AI</h2>
+          <div class="add-row">
+            <input type="text" id="drdAiEditInput" placeholder='e.g. &quot;Fix the numbering in section 3&quot;' style="flex:1;min-width:260px">
+            <button class="btn primary small" id="drdAiEditBtn">Apply edit</button>
+          </div>
+        </div>
+        <div id="drdPreview" class="proposal-doc" contenteditable="true"></div>
+
+        <div class="card">
+          <h2>Solution suggestions</h2>
+          <p class="hint">Generated together with the Detailed Requirement Document above (one pass, not a separate call). Grounded in your Knowledge Base's "Previous Solutions" documents when any are on file, compared against the model's own current knowledge where they differ. Accept the approach to move forward with — its tools are auto-selected in Team &amp; Tools, still fully editable there.</p>
+          <div id="solutionsStatus" class="hint"></div>
+          <div id="solutionsList"></div>
+        </div>
+
+        <div class="card toolbar-card">
+          <button class="btn primary" id="drdProceedToTeamBtn">Proceed to Team &amp; Tools</button>
+          <span id="drdProceedStatus" class="hint" style="margin:0"></span>
+        </div>
+      </div>
+
+      <div class="step-nav-arrows">
+        <button class="btn secondary small" data-nav-prev="1">← Back: Setup</button>
+        <button class="btn primary small" data-nav-next="3">Next: Team &amp; Tools →</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: Team & Tools -->
+    <section class="step hidden" id="step-3">
+      <header class="step-head">
+        <div class="card-head-row" style="align-items:flex-start">
+          <div>
+            <h1>Team &amp; tools</h1>
+            <p>The only manual step. Add whoever's working on this from the dropdown, split their hours, and add the Zoho tools in scope. This drives the Investment section — the AI never invents these numbers.</p>
+          </div>
+          <button class="btn small secondary" id="resetTeamToolsBtn">Reset team &amp; tools</button>
+        </div>
+      </header>
+
+      <div class="card">
+        <h2>Team members</h2>
+        <div class="add-row">
+          <select id="addMemberSelect"></select>
+          <button class="btn small" id="addMemberBtn">+ Add to team</button>
+          <span class="hint" style="margin:0 0 0 6px">or</span>
+          <button class="btn small secondary" id="addCustomMemberBtn">+ Add someone new</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="teamTable">
+            <thead>
+              <tr><th>Name</th><th>Role</th><th>Cost / hour</th><th>Mapping hrs</th><th>Implementation hrs</th><th>Hypercare hrs</th><th>Line cost</th><th></th></tr>
+            </thead>
+            <tbody id="teamTableBody"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="teamEmptyHint">No one added yet — pick a name above and click "Add to team".</p>
+      </div>
+
+      <div class="card">
+        <h2>Zoho tools &amp; editions</h2>
+        <div class="add-row">
+          <select id="addToolSelect"></select>
+          <select id="addEditionSelect"></select>
+          <input type="number" id="addToolQty" value="1" min="1" style="width:60px">
+          <select id="addToolCycle"><option value="yearly">Yearly</option><option value="monthly">Monthly</option></select>
+          <button class="btn small" id="addToolBtn">+ Add tool</button>
+        </div>
+        <div class="table-wrap tall">
+          <table class="data-table" id="toolTable">
+            <thead>
+              <tr><th>Tool</th><th>Edition</th><th>Notes</th><th>Qty</th><th>Cycle</th><th>Line cost</th><th></th></tr>
+            </thead>
+            <tbody id="toolTableBody"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="toolEmptyHint">No tools added yet — pick a tool and edition above and click "Add tool".</p>
+      </div>
+
+      <div class="card summary-card">
+        <h2>Live investment preview</h2>
+        <div id="costingSummary"></div>
+      </div>
+
+      <div class="card toolbar-card">
+        <button class="btn primary" id="proceedToGenerateBtn">Proceed to Generate Proposal &amp; SOW</button>
+        <button class="btn secondary" id="teamToolsSaveForLaterBtn">Save for later</button>
+        <span class="hint" style="margin:0">Preview your Detailed Requirement Document and Team &amp; Tools together, then generate a Proposal and/or Scope of Work.</span>
+      </div>
+
+      <div class="step-nav-arrows">
+        <button class="btn secondary small" data-nav-prev="2">← Back: Document</button>
+        <button class="btn primary small" data-nav-next="4">Next: Review &amp; Export →</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: Review & Export -->
+    <section class="step hidden" id="step-4">
+      <header class="step-head">
+        <h1>Review &amp; export</h1>
+        <p>Preview the Detailed Requirement Document and Team &amp; Tools together, then generate a Proposal and/or Scope of Work.</p>
+      </header>
+
+      <div class="card">
+        <div class="card-head-row">
+          <h2>Detailed Requirement Document</h2>
+          <button class="btn small secondary" id="reviewEditDrdBtn">Edit in Document step</button>
+        </div>
+        <div id="drdReviewPreview" class="hint" style="max-height:260px;overflow:auto;white-space:pre-wrap;line-height:1.6"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head-row">
+          <h2>Team &amp; Tools</h2>
+          <button class="btn small secondary" id="reviewEditTeamBtn">Edit in Team &amp; Tools step</button>
+        </div>
+        <div id="teamToolsReviewSummary"></div>
+      </div>
+
+      <div class="card">
+        <h2>Client logo <span class="hint" style="margin:0;font-weight:400">(optional)</span></h2>
+        <p class="hint">Appears in the top-left of the generated documents (opposite the company logo). Auto-fits the same way — scaled to fit, never stretched or cropped.</p>
+        <div class="grid-2">
+          <div>
+            <div class="logo-preview-box" id="clientLogoPreviewBox" style="display:none"><img id="clientLogoPreview" alt="Client logo preview"></div>
+            <p class="hint" id="clientLogoEmptyHint" style="margin:6px 0 0">No client logo uploaded — documents will show just the company logo.</p>
+          </div>
+          <div>
+            <input type="file" id="clientLogoInput" accept="image/*">
+            <div class="add-row" style="margin-top:10px;margin-bottom:0">
+              <button class="btn small secondary" id="clientLogoReplaceBtn" style="display:none">Select another image</button>
+              <button class="btn small secondary" id="clientLogoRemoveBtn" style="display:none">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card toolbar-card">
+        <button class="btn primary" id="drdGenProposalBtn">Generate Proposal</button>
+        <button class="btn primary" id="drdGenSowBtn">Generate Scope of Work</button>
+        <button class="btn secondary" id="reviewSaveForLaterBtn">Save for later</button>
+        <span id="drdGenStatus" class="hint" style="margin:0"></span>
+      </div>
+
+      <div class="doc-section-banner" id="proposalSectionBanner" style="display:none">PROPOSAL DOCUMENT</div>
+      <div class="card toolbar-card" id="exportToolbar" style="display:none">
+        <select id="exportFormat">
+          <option value="docx">Word (.docx)</option>
+          <option value="pdf">PDF (.pdf)</option>
+        </select>
+        <button class="btn primary" id="downloadBtn">Download</button>
+        <button class="btn secondary" id="regenBtn">Regenerate</button>
+        <button class="btn secondary" id="resetBtn">Reset</button>
+        <span id="exportStatus" class="hint" style="margin:0"></span>
+      </div>
+
+      <p class="hint" id="pdfHint" style="margin-top:-8px;display:none">Both downloads read straight from the document below, including any edits — headings are kept together with the content right after them so they don't get stranded at the bottom of a page.</p>
+
+      <div class="card" id="aiEditCard" style="display:none">
+        <h2>Edit with AI</h2>
+        <p class="hint">Type an instruction and the AI edits the document above directly — e.g. "shorten section 1 to two paragraphs" or "make the promise box sound warmer". Everything is also directly editable by hand — just click into any text or table cell.</p>
+        <div class="add-row">
+          <input type="text" id="aiEditInput" placeholder='e.g. "Make the Key Notes shorter and punchier"' style="flex:1;min-width:260px">
+          <button class="btn primary small" id="aiEditBtn">Apply edit</button>
+        </div>
+      </div>
+
+      <div id="proposalPreview" class="proposal-doc"></div>
+
+      <div id="sowSection" style="display:none">
+        <div class="doc-section-banner">SCOPE OF WORK DOCUMENT</div>
+        <div class="card toolbar-card" id="sowExportToolbar" style="display:none">
+          <select id="sowExportFormat">
+            <option value="docx">Word (.docx)</option>
+            <option value="pdf">PDF (.pdf)</option>
+          </select>
+          <button class="btn primary" id="sowDownloadBtn">Download</button>
+          <button class="btn secondary" id="sowRegenBtn">Regenerate</button>
+          <span id="sowExportStatus" class="hint" style="margin:0"></span>
+        </div>
+        <div class="card" id="sowAiEditCard" style="display:none">
+          <h2>Edit Scope of Work with AI</h2>
+          <p class="hint">Type an instruction and the AI edits the document below directly. Everything is also directly editable by hand.</p>
+          <div class="add-row">
+            <input type="text" id="sowAiEditInput" placeholder='e.g. &quot;add an assumptions section&quot;' style="flex:1;min-width:260px">
+            <button class="btn primary small" id="sowAiEditBtn">Apply edit</button>
+          </div>
+        </div>
+        <div id="sowPreview" class="proposal-doc"></div>
+      </div>
+
+      <div class="step-nav-arrows">
+        <button class="btn secondary small" data-nav-prev="3">← Back: Team &amp; Tools</button>
+        <span class="hint" style="margin:0">End of the flow — download your documents above, or start a new proposal from the sidebar.</span>
+      </div>
+    </section>
+
+    <!-- STEP 5: Knowledge Base -->
+    <section class="step hidden" id="step-5">
+      <header class="step-head">
+        <h1>Knowledge Base</h1>
+        <p>Manage the Zoho tool/edition price list every proposal draws from, and upload reference documents for the AI assistant to search.</p>
+      </header>
+
+      <div class="card" id="kbUploadCard">
+        <div class="card-head-row">
+          <h2>Reference documents (RAG)</h2>
+          <span id="kbHealthPill" class="status-pill status-off">Checking local server...</span>
+        </div>
+        <div class="dropzone" id="kbDropzone">
+          <div id="kbDropzoneLabel">Drop a .md, .txt, or .json file here, or click to choose a file</div>
+        </div>
+        <input type="file" id="kbFileInput" accept=".md,.txt,.json" style="display:none">
+        <div class="add-row" style="margin-top:8px">
+          <span class="hint" style="margin:0">Upload into section:</span>
+          <select id="kbUploadSection"></select>
+          <button class="btn small secondary" id="kbNewSectionBtn" title="Create a new section">+ New section</button>
+        </div>
+        <div class="kb-progress-wrap hidden" id="kbProgressWrap">
+          <div class="kb-progress-track">
+            <div class="kb-progress-bar" id="kbProgressBar"></div>
+          </div>
+          <div class="kb-progress-row">
+            <div class="kb-progress-label" id="kbProgressLabel">Uploading... 0%</div>
+            <button type="button" class="btn small secondary" id="kbCancelUploadBtn" style="display:none">Cancel</button>
+          </div>
+        </div>
+        <button type="button" class="kb-advanced-toggle" id="kbAdvancedToggle">Advanced upload settings ▾</button>
+        <div class="kb-advanced-panel hidden" id="kbAdvancedPanel">
+          <p class="hint">Leave blank for defaults. Lower these if a large file fails on upload (smaller requests, more of them).</p>
+          <div class="kb-advanced-grid">
+            <label class="field"><span>Chunk size (chars)</span><input type="number" id="kbAdvChunkSize" placeholder="1500" min="100"></label>
+            <label class="field"><span>Chunk overlap (chars)</span><input type="number" id="kbAdvChunkOverlap" placeholder="250" min="0"></label>
+            <label class="field"><span>Embedding batch size</span><input type="number" id="kbAdvEmbedBatch" placeholder="32" min="1"></label>
+            <label class="field"><span>Qdrant storage batch size</span><input type="number" id="kbAdvUpsertBatch" placeholder="300" min="1"></label>
+          </div>
+        </div>
+        <p class="hint" id="kbUploadStatus">Uploaded files are chunked and embedded via the provider set in Setup (OpenRouter or Ollama), then stored in Qdrant. The "Ask AI" bubble (bottom-right, on every page) searches these when answering.</p>
+
+        <div id="kbDocSections"></div>
+        <p class="hint" id="kbDocEmptyHint" style="display:none">No reference documents uploaded yet.</p>
+
+        <button type="button" class="kb-advanced-toggle" id="kbSectionsManageToggle">Manage sections ▾</button>
+        <div class="kb-advanced-panel hidden" id="kbSectionsManagePanel">
+          <p class="hint">"Additional documentation" is the built-in catch-all for anything not assigned elsewhere, and can't be removed. Everything else here is fully editable.</p>
+          <div id="kbSectionsManageList"></div>
+        </div>
+
+        <div class="kb-chromadbs" id="kbCollectionsSection">
+          <h3>Qdrant collections</h3>
+          <p class="hint">This Qdrant instance may hold collections from other projects/scripts too. Check one or more for Ask AI to search across all of them at once; the most recently checked one is where new uploads/edits go and what the table above shows.</p>
+          <div id="kbCollectionsList"></div>
+          <div class="add-row" style="margin-top:10px">
+            <input type="text" id="kbNewCollectionName" placeholder="New collection name...">
+            <button class="btn small secondary" id="kbCreateCollectionBtn">Create &amp; switch</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head-row">
+          <h2>Zoho tools &amp; editions</h2>
+          <div class="filter-row">
+            <input type="text" id="adminToolsSearch" class="search-input" placeholder="Search tools...">
+            <button class="btn small secondary" id="adminToolsSortBtn">Arrange A–Z</button>
+          </div>
+        </div>
+
+        <button type="button" class="kb-advanced-toggle" id="toolsAddEditToggle">+ Add / Edit tool ▾</button>
+        <div class="kb-advanced-panel hidden" id="toolsAddEditPanel">
+          <div class="add-row">
+            <select id="adminNewToolDomain"></select>
+            <button class="btn small secondary" id="adminNewDomainBtn" title="Create a new domain">+ New domain</button>
+          </div>
+          <div class="add-row">
+            <input type="text" id="adminNewToolName" placeholder="Tool" list="adminToolNamesList">
+            <input type="text" id="adminNewToolEdition" placeholder="Edition" list="adminToolEditionsList">
+            <input type="number" id="adminNewToolMonthly" placeholder="Monthly" style="width:100px">
+            <input type="number" id="adminNewToolYearly" placeholder="Yearly" style="width:100px">
+            <input type="text" id="adminNewToolNotes" placeholder="Notes">
+            <button class="btn small" id="adminAddToolBtn">+ Add tool</button>
+          </div>
+          <datalist id="adminToolNamesList"></datalist>
+          <datalist id="adminToolEditionsList"></datalist>
+          <p class="hint">Tool and Edition suggest existing entries as you type (so adding another edition tier reuses the same tool name) — type a new value to create something that doesn't exist yet. Domains follow Zoho's own product categories (zoho.com → Products → Apps); use "+ New domain" for anything that doesn't fit one.</p>
+
+          <button type="button" class="kb-advanced-toggle" id="domainsManageToggle">Manage domains ▾</button>
+          <div class="kb-advanced-panel hidden" id="domainsManagePanel">
+            <p class="hint">All domains here are editable -- add new ones or remove any, including Zoho's originally-seeded 13. A tool still assigned to a removed domain keeps showing it (marked "(removed)") until you pick something else.</p>
+            <div id="domainsManageList"></div>
+          </div>
+        </div>
+
+        <p class="hint">New tools are inserted alphabetically automatically. Drag the ⠿ handle to reorder by hand; use "Arrange A–Z" any time to snap back to alphabetical.</p>
+        <div class="table-wrap tall">
+          <table class="data-table" id="adminToolsTable">
+            <thead><tr><th></th><th>Domain</th><th>Tool</th><th>Edition</th><th>Monthly</th><th>Yearly</th><th>Notes</th><th></th></tr></thead>
+            <tbody id="adminToolsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PENDING: saved-for-later documents -->
+    <section class="step hidden" id="step-pending">
+      <header class="step-head">
+        <h1>Pending</h1>
+        <p>Proposals saved for later. These stay here until you delete them yourself — even after you've generated a full proposal from one.</p>
+      </header>
+      <div class="card">
+        <div class="filter-row">
+          <input type="text" id="pendingSearch" class="search-input" placeholder="Search by file/document name...">
+          <label class="field" style="margin:0"><span>From</span><input type="date" id="pendingFilterFrom"></label>
+          <label class="field" style="margin:0"><span>To</span><input type="date" id="pendingFilterTo"></label>
+          <button class="btn small secondary" id="pendingFilterClearBtn">Clear filters</button>
+        </div>
+      </div>
+      <div id="pendingList"></div>
+      <p class="hint" id="pendingEmptyHint" style="display:none">Nothing saved for later. Use "Save for later" in the Document step's question list to put a draft here.</p>
+    </section>
+
+    <!-- ADMIN: master data management -->
+    <section class="step hidden" id="step-admin">
+      <header class="step-head">
+        <h1>Admin</h1>
+        <p>Manage the team roster here. The document checklist now comes from the Template Library (its own tab, editable there) instead of a fixed list. Zoho tools &amp; editions live in Knowledge Base. Every change here is logged.</p>
+      </header>
+
+      <div class="card">
+        <div class="card-head-row"><h2>Backup &amp; restore</h2></div>
+        <p class="hint">Export everything the app stores (Setup, all master lists, all edit histories, all Pending drafts, and the current working document) into one <code>data.json</code> file. Importing overwrites the current data and reloads the app.</p>
+        <div class="add-row">
+          <button class="btn secondary small" id="exportDataBtn">Export data.json</button>
+          <input type="file" id="importDataInput" accept="application/json" hidden>
+          <button class="btn secondary small" id="importDataBtn">Import data.json</button>
+        </div>
+      </div>
+
+      <nav class="admin-tabs">
+        <button class="admin-tab active" data-admin-tab="defaults">Defaults</button>
+        <button class="admin-tab" data-admin-tab="team">Team members</button>
+        <button class="admin-tab" data-admin-tab="criteria">Template Library</button>
+        <button class="admin-tab" data-admin-tab="history">History</button>
+        <button class="admin-tab" data-admin-tab="llmcontext">LLM Context</button>
+        <button class="admin-tab" data-admin-tab="logo">Logo</button>
+      </nav>
+
+      <div class="admin-panel" id="adminPanel-defaults">
+        <div class="card">
+          <h2>Your company (Prepared by)</h2>
+          <div class="grid-2">
+            <label class="field"><span>Company name</span><input type="text" id="providerName" value="Satsang Solutions Private Limited"></label>
+            <label class="field"><span>Location</span><input type="text" id="providerLocation" value="Madurai, Tamil Nadu"></label>
+          </div>
+          <label class="field"><span>Tagline (shown in the document footer)</span>
+            <input type="text" id="providerTagline" value="Structure . Systemize . Scale . Succeed.">
+          </label>
+          <label class="field"><span>About paragraph (used in Section 7)</span>
+            <textarea id="providerAbout" rows="3">Satsang Solutions Private Limited is a technology solutions company. We structure, systemize, scale, and help businesses succeed — working with world-class platforms to implement technology that serves each organisation's specific operational reality. As an Authorised Zoho Partner, we bring the full depth of the platform to every engagement and work alongside every team until the system is genuinely working.</textarea>
+          </label>
+        </div>
+
+        <div class="card">
+          <h2>Defaults</h2>
+          <div class="grid-3">
+            <label class="field"><span>GST %</span><input type="number" id="gstPercent" value="18" min="0" step="0.5"></label>
+            <label class="field"><span>Proposal validity (days)</span><input type="number" id="validityDays" value="7" min="1"></label>
+            <label class="field"><span>Currency symbol</span><input type="text" id="currencySymbol" value="Rs."></label>
+          </div>
+          <div class="grid-3">
+            <label class="field"><span>Advance % (on acceptance)</span><input type="number" id="pctAdvance" value="100" min="0" max="100"></label>
+            <label class="field"><span>SOW sign-off % (of impl+hypercare)</span><input type="number" id="pctSignoff" value="75" min="0" max="100"></label>
+            <label class="field"><span>Go-live % (of impl+hypercare)</span><input type="number" id="pctGolive" value="25" min="0" max="100"></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="adminPanel-team" style="display:none">
+        <div class="card">
+          <div class="card-head-row">
+            <h2>Team members</h2>
+            <div class="filter-row">
+              <input type="text" id="adminTeamSearch" class="search-input" placeholder="Search team members...">
+              <button class="btn small secondary" id="adminTeamSortBtn">Arrange A–Z</button>
+            </div>
+          </div>
+          <div class="add-row">
+            <input type="text" id="adminNewMemberName" placeholder="Name">
+            <input type="number" id="adminNewMemberRate" placeholder="Cost / hour" style="width:120px">
+            <select id="adminNewMemberRole">
+              <option value="">No role</option>
+            </select>
+            <button class="btn small secondary" id="adminNewRoleBtn" title="Create a new role">+ New role</button>
+            <button class="btn small" id="adminAddMemberBtn">+ Add member</button>
+          </div>
+          <button type="button" class="kb-advanced-toggle" id="rolesManageToggle">Manage roles ▾</button>
+          <div class="kb-advanced-panel hidden" id="rolesManagePanel">
+            <p class="hint">All roles here are editable -- add new ones or remove any, including the originally-seeded ones. A member still assigned a removed role keeps showing it (marked "(removed)") until you pick something else.</p>
+            <div id="rolesManageList"></div>
+          </div>
+          <p class="hint">New members are inserted alphabetically automatically. Drag the ⠿ handle to reorder by hand; use "Arrange A–Z" any time to snap back to alphabetical.</p>
+          <div class="table-wrap">
+            <table class="data-table" id="adminTeamTable">
+              <thead><tr><th></th><th>Name</th><th>Cost / hour</th><th>Role</th><th></th></tr></thead>
+              <tbody id="adminTeamTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="adminPanel-criteria" style="display:none">
+        <div class="card">
+          <div class="card-head-row">
+            <h2>Template Library</h2>
+          </div>
+          <p class="hint">
+            Customisable per industry/project type. Each template category holds its own section structure for all four document types (PRD, DRD, Proposal, SOW) — the Document step checks the uploaded file against whichever category is picked there via the Template dropdown, section by section, with anything missing turned into a fill-in question.
+          </p>
+          <div class="add-row" style="margin-bottom:10px">
+            <select id="tmplCategorySelect" style="max-width:320px"></select>
+          </div>
+          <div class="add-row" style="margin-bottom:14px">
+            <input type="text" id="tmplNewCategoryInput" placeholder="New template category name...">
+            <button class="btn small secondary" id="tmplAddCategoryBtn">Add category</button>
+            <button class="btn small secondary" id="tmplRenameCategoryBtn">Rename selected</button>
+            <button class="btn small secondary" id="tmplDeleteCategoryBtn">Delete selected</button>
+          </div>
+          <nav class="admin-tabs" id="tmplDocTypeTabs">
+            <button class="tmpl-doc-tab active" data-doc-key="prd">PRD</button>
+            <button class="tmpl-doc-tab" data-doc-key="drd">DRD</button>
+            <button class="tmpl-doc-tab" data-doc-key="proposal">Proposal</button>
+            <button class="tmpl-doc-tab" data-doc-key="sow">SOW</button>
+          </nav>
+          <p class="hint">Drag the ⠿ handle to reorder sections. Every change here takes effect immediately in the Document step.</p>
+          <div id="tmplSectionList"></div>
+          <div class="add-row" style="margin-top:10px">
+            <input type="text" id="tmplNewSectionInput" placeholder="New section name...">
+            <button class="btn small primary" id="tmplAddSectionBtn">Add section</button>
+          </div>
+          <div id="tmplStatus" class="hint"></div>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="adminPanel-history" style="display:none">
+        <div class="card">
+          <div class="card-head-row">
+            <h2>History</h2>
+          </div>
+          <label class="field" style="max-width:320px">
+            <span>Show history for</span>
+            <select id="historyPicker">
+              <option value="team">Team members — edit history</option>
+              <option value="tools">Zoho tools &amp; editions — edit history</option>
+              <option value="criteria">Checklist criteria — edit history</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="card" id="teamHistoryCard">
+          <h2>Team members — edit history</h2>
+          <div class="table-wrap tall">
+            <table class="data-table" id="teamHistoryTable">
+              <thead><tr><th>Time</th><th>Action</th><th>Name</th><th>Field</th><th>Old</th><th>New</th><th></th></tr></thead>
+              <tbody id="teamHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="toolsHistoryCard" style="display:none">
+          <h2>Zoho tools &amp; editions — edit history</h2>
+          <div class="table-wrap tall">
+            <table class="data-table" id="toolsHistoryTable">
+              <thead><tr><th>Time</th><th>Action</th><th>Name</th><th>Field</th><th>Old</th><th>New</th><th></th></tr></thead>
+              <tbody id="toolsHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="criteriaHistoryCard" style="display:none">
+          <h2>Checklist criteria — edit history</h2>
+          <div class="table-wrap tall">
+            <table class="data-table" id="criteriaHistoryTable">
+              <thead><tr><th>Time</th><th>Action</th><th>Name</th><th>Field</th><th>Old</th><th>New</th><th></th></tr></thead>
+              <tbody id="criteriaHistoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="adminPanel-llmcontext" style="display:none">
+        <div class="card">
+          <h2>LLM context length (Ollama only)</h2>
+          <p class="hint">
+            Ollama defaults to a small context window (commonly 2–4K tokens) regardless of what the underlying model actually supports, silently truncating anything beyond it — the usual cause of a local model "forgetting" earlier parts of a long document or conversation. This setting raises that cap for every Ollama call this app makes (Ask AI, Send to AI, question generation, proposal generation, AI edit).
+          </p>
+          <p class="hint">
+            <strong>Only applies when the chat provider is set to Ollama in Setup.</strong> Cloud models via OpenRouter manage their own context window server-side — there's nothing to configure or cap here, and this setting is ignored entirely for them.
+          </p>
+          <label class="field" style="max-width:280px">
+            <span>Context length (tokens)</span>
+            <input type="number" id="ollamaContextLengthInput" placeholder="Ollama's default (leave blank)" min="512" step="512">
+          </label>
+          <p class="hint">
+            Larger values need more RAM/VRAM and can slow down responses. A few starting points: 4096 for short Q&A, 8192–16384 for document analysis (matches most of what this app sends per call), 32768+ only if your model and hardware genuinely support it. Leave blank to use whatever the model/Ollama defaults to.
+          </p>
+          <p class="hint">
+            <strong>Compatibility note:</strong> this is passed as a top-level <code>num_ctx</code> field alongside the normal OpenAI-compatible request. Ollama's official documentation states its OpenAI-compatibility layer doesn't support setting context length this way (the documented alternative is baking it into a custom Modelfile) — recent Ollama versions may honor it as an extension regardless; unrecognized fields are otherwise harmlessly ignored. If it doesn't seem to be taking effect, updating Ollama is worth trying first.
+          </p>
+        </div>
+      </div>
+
+      <div class="admin-panel" id="adminPanel-logo" style="display:none">
+        <div class="card">
+          <h2>Company logo</h2>
+          <p class="hint">Used in the top-right of every generated Proposal and Scope of Work. Uploading a new one auto-fits it (scaled to fit, never stretched or cropped) — nothing is committed until you click "Accept".</p>
+
+          <div class="grid-2">
+            <div>
+              <p class="hint" style="margin:0 0 6px"><strong>Current logo</strong></p>
+              <div class="logo-preview-box"><img id="currentLogoPreview" alt="Current logo"></div>
+            </div>
+            <div>
+              <p class="hint" style="margin:0 0 6px"><strong>New logo (preview before accepting)</strong></p>
+              <div class="logo-preview-box" id="newLogoPreviewBox" style="display:none"><img id="newLogoPreview" alt="New logo preview"></div>
+              <p class="hint" id="newLogoEmptyHint" style="margin:0">Choose a file below to preview it here.</p>
+            </div>
+          </div>
+
+          <input type="file" id="logoUploadInput" accept="image/*" style="margin-top:12px">
+          <div class="add-row" style="margin-top:10px">
+            <button class="btn primary small" id="logoAcceptBtn" disabled>Accept new logo</button>
+            <button class="btn secondary small" id="logoRevokeBtn" style="display:none">Revoke changes (restore previous)</button>
+          </div>
+          <div id="logoStatus" class="hint"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Floating Ask AI widget — present on every step -->
+<button id="aiFab" class="ai-fab" title="Ask AI" aria-label="Ask AI">
+  <span class="ai-fab-icon">✦</span>
+</button>
+<div id="aiPanel" class="ai-panel hidden">
+  <div class="ai-panel-head">
+    <span>Ask AI</span>
+    <div class="ai-panel-head-actions">
+      <button id="aiHistoryBtn" class="ai-panel-icon-btn" title="Chat history">History <span id="aiHistoryArrow" class="ai-history-arrow">▾</span></button>
+      <button id="aiNewChatBtn" class="ai-panel-icon-btn" title="New chat">New chat</button>
+      <button id="aiPanelClose" class="ai-panel-close" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <div class="ai-panel-docs">
+    <button id="aiDocsToggle" class="ai-panel-docs-toggle" type="button">Search all documents ▾</button>
+    <div id="aiDocsDropdown" class="ai-panel-docs-dropdown hidden">
+      <p class="hint" style="margin:0 0 6px">Check documents to search only those; leave unchecked to search everything.</p>
+      <div id="aiDocsList" class="ai-panel-docs-list"></div>
+    </div>
+  </div>
+  <div id="aiHistoryDropdown" class="ai-panel-docs-dropdown hidden"></div>
+  <div class="ai-panel-messages" id="aiPanelMessages">
+    <div class="ai-msg ai-msg-bot">Ask me anything — general questions, or about the documents you've uploaded to the Knowledge Base. Use "Search all documents" above to scope a question to specific files.</div>
+  </div>
+  <div class="ai-panel-input-row">
+    <input type="text" id="aiPanelInput" placeholder="Ask a question...">
+    <button id="aiPanelSend" class="btn small primary">Send</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- Vendor libs (CDN) -->
+<script src="https://unpkg.com/mammoth@1.7.2/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<script src="https://unpkg.com/pdfmake@0.2.20/build/pdfmake.min.js"></script>
+<script src="https://unpkg.com/pdfmake@0.2.20/build/vfs_fonts.js"></script>
+<script src="https://unpkg.com/docx@9.7.1/dist/index.umd.cjs"></script>
+
+<!-- App code -->
+<script src="assets/data.js?v=11"></script>
+<script src="assets/logoData.js?v=2"></script>
+<script src="assets/zohoToolkit.js?v=11"></script>
+<script src="assets/masterData.js?v=18"></script>
+<script src="assets/criteria.js?v=10"></script>
+<script src="assets/documentFormats.js?v=3"></script>
+<script src="assets/toolDescriptions.js?v=10"></script>
+<script src="assets/pending.js?v=10"></script>
+<script src="assets/state.js?v=27"></script>
+<script src="assets/backup.js?v=10"></script>
+<script src="assets/parseDoc.js?v=10"></script>
+<script src="assets/costing.js?v=10"></script>
+<script src="assets/openrouter.js?v=36"></script>
+<script src="assets/docxExport.js?v=17"></script>
+<script src="assets/pdfExport.js?v=16"></script>
+<script src="assets/knowledgeBase.js?v=25"></script>
+<script src="assets/askAi.js?v=10"></script>
+<script src="assets/main.js?v=46"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "proposal-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Proposal Studio — static UI, run together with its local Knowledge Base server (Express, connecting to Qdrant) via one command.",
+  "scripts": {
+    "postinstall": "npm --prefix server install",
+    "api": "npm --prefix server run server",
+    "ui": "node node_modules/serve/build/main.js -l 3000 .",
+    "start": "node node_modules/concurrently/dist/bin/concurrently.js -n API,UI -c cyan,magenta \"npm:api\" \"npm:ui\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
