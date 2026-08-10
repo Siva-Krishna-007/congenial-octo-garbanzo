@@ -19,8 +19,9 @@ under a plain `file://` URL. The safest way to run it:
 
 ```bash
 cd proposal-app
-python3 -m http.server 8000
-# then open http://localhost:8000 in your browser
+npm install
+npm start
+# then open http://localhost:3000 in your browser
 ```
 
 (Any static server works — `npx serve`, VS Code's "Live Server", etc.)
